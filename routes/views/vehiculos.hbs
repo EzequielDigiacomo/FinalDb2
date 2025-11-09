@@ -1,0 +1,65 @@
+<div class="vehiculos-page">
+    <h2>🚗 Gestión de Vehículos</h2>
+    
+    <!-- Formulario para agregar vehículo -->
+    <div class="form-container">
+        <h3>➕ Registrar Nuevo Vehículo</h3>
+        <form action="/api/vehiculos" method="POST" class="form-grid">
+            <div class="form-group">
+                <input type="text" name="placa" placeholder="Placa" required>
+            </div>
+            <div class="form-group">
+                <input type="text" name="marca" placeholder="Marca" required>
+            </div>
+            <div class="form-group">
+                <input type="text" name="modelo" placeholder="Modelo" required>
+            </div>
+            <div class="form-group">
+                <input type="number" name="año" placeholder="Año" min="1900" max="2030" required>
+            </div>
+            <div class="form-group">
+                <input type="text" name="color" placeholder="Color" required>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-success">Registrar Vehículo</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Lista de vehículos -->
+    <div class="table-container">
+        <h3>📋 Vehículos Registrados</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Placa</th>
+                    <th>Marca</th>
+                    <th>Modelo</th>
+                    <th>Año</th>
+                    <th>Color</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each vehiculos}}
+                <tr>
+                    <td>{{this.placa}}</td>
+                    <td>{{this.marca}}</td>
+                    <td>{{this.modelo}}</td>
+                    <td>{{this.año}}</td>
+                    <td>{{this.color}}</td>
+                    <td>
+                        <span class="badge {{#if this.activo}}badge-success{{else}}badge-danger{{/if}}">
+                            {{#if this.activo}}Activo{{else}}Inactivo{{/if}}
+                        </span>
+                    </td>
+                </tr>
+                {{else}}
+                <tr>
+                    <td colspan="6" class="text-center">No hay vehículos registrados</td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+</div>

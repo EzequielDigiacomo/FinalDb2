@@ -1,0 +1,19 @@
+<nav class="navbar">
+    <div class="nav-content">
+        <a href="/" class="nav-link {{#if (eq currentPath '/')}}active{{/if}}">
+            📊 Dashboard
+        </a>
+        <a href="/conductores" class="nav-link {{#if (eq currentPath '/conductores')}}active{{/if}}">
+            👤 Conductores
+        </a>
+        <a href="/vehiculos" class="nav-link {{#if (eq currentPath '/vehiculos')}}active{{/if}}">
+            🚗 Vehículos
+        </a>
+        <a href="/multas" class="nav-link {{#if (eq currentPath '/multas')}}active{{/if}}">
+            📝 Multas
+        </a>
+        <a href="/estadisticas" class="nav-link {{#if (eq currentPath '/estadisticas')}}active{{/if}}">
+            📈 Estadísticas
+        </a>
+    </div>
+</nav>

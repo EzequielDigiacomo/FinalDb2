@@ -1,0 +1,34 @@
+Generales--
+Carteles de confirmacion al agregar o eliminar cosas
+
+nav--
+reoganizar  el menu
+cambiar/agregar favicon
+
+footer--
+footer robusto(pela te extrañamos)
+
+Login--
+color de fondo, boton y fuentes del form
+
+Dashboard--
+agregar cards, multas pagas,
+funcionalidad a las cards de ser necesario.
+
+Conductores--
+ver espacios dentro del form
+cambiar/agregar favicon
+
+vehiculos--
+agregar columna acciones + boton (como en conductores)
+ver espacios dentro del form
+cambiar/agregar favicon
+
+Multas--
+ver espacios dentro del form
+cambiar/agregar favicon
+reveer eso de puntos a descontar, eliminar o darle funcionalidad
+modificar el input de motivo de la multa, y predeterminar los motivos(ver gravedad)
+
+Estadisticas--
+analizar o eliminar

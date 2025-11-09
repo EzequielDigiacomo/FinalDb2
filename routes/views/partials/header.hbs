@@ -1,0 +1,13 @@
+<header class="header">
+    <div class="header-content">
+        <div class="logo">
+            <h1> Sistema de Gestión de Multas</h1>
+        </div>
+        <div class="user-info">
+            <span>Bienvenido, <strong>{{user.usuario}}</strong></span>
+            <form action="/api/auth/logout" method="POST" style="display: inline;">
+                <button type="submit" class="logout-btn">Cerrar Sesión</button>
+            </form>
+        </div>
+    </div>
+</header>

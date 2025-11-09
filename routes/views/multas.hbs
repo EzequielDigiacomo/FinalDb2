@@ -1,0 +1,93 @@
+<div class="multas-page">
+    <h2>📝 Gestión de Multas</h2>
+    
+    <!-- Formulario para agregar multa -->
+    <div class="form-container">
+        <h3>➕ Cargar Nueva Multa</h3>
+        <form action="/api/multas" method="POST" class="form-grid" id="form-multa">
+            <div class="form-group">
+                <input type="text" name="dniConductor" placeholder="DNI Conductor" required 
+                       id="dni-buscar">
+                <div id="info-conductor"></div>
+            </div>
+            <div class="form-group">
+                <input type="text" name="placaVehiculo" placeholder="Placa Vehículo" required
+                       id="placa-buscar">
+                <div id="info-vehiculo"></div>
+            </div>
+            <div class="form-group">
+                <input type="text" name="motivo" placeholder="Motivo de la multa" required>
+            </div>
+            <div class="form-group">
+                <input type="number" name="monto" placeholder="Monto $" min="0" step="0.01" required>
+            </div>
+            <div class="form-group">
+                <select name="gravedad" class="form-select" required id="gravedad">
+                    <option value="">Seleccionar gravedad</option>
+                    <option value="leve">Leve</option>
+                    <option value="media">Media</option>
+                    <option value="grave">Grave</option>
+                    <option value="muy_grave">Muy Grave</option>
+                </select>
+                <div id="info-puntos" class="badge gravedad-leve">Puntos a descontar: 1</div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-warning">Cargar Multa</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Lista de multas -->
+    <div class="table-container">
+        <h3>📋 Multas Registradas</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>DNI Conductor</th>
+                    <th>Placa Vehículo</th>
+                    <th>Motivo</th>
+                    <th>Monto</th>
+                    <th>Gravedad</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each multas}}
+                <tr>
+                    <td>{{formatDate this.fechaInfraccion}}</td>
+                    <td>{{this.dniConductor}}</td>
+                    <td>{{this.placaVehiculo}}</td>
+                    <td>{{this.motivo}}</td>
+                    <td>{{formatCurrency this.monto}}</td>
+                    <td>
+                        <span class="badge gravedad-{{this.gravedad}}">
+                            {{this.gravedad}}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge {{#if this.pagada}}badge-success{{else}}badge-warning{{/if}}">
+                            {{#if this.pagada}}Pagada{{else}}Pendiente{{/if}}
+                        </span>
+                    </td>
+                    <td>
+                        {{#unless this.pagada}}
+                        <button type="button" class="btn btn-success btn-sm" 
+                                onclick="confirmarPagoMulta('{{this._id}}', '{{this.monto}}')">
+                            Marcar como Pagada
+                        </button>
+                        {{else}}
+                        <span class="text-muted">Pagada</span>
+                        {{/unless}}
+                    </td>
+                </tr>
+                {{else}}
+                <tr>
+                    <td colspan="8" class="text-center">No hay multas registradas</td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+</div>

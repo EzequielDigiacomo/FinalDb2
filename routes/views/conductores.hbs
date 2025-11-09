@@ -1,0 +1,77 @@
+<div class="conductores-page">
+    <h2>👨‍💼 Gestión de Conductores</h2>
+    
+    <!-- Formulario para agregar conductor -->
+    <div class="form-container">
+        <h3>➕ Registrar Nuevo Conductor</h3>
+        <form action="/api/conductores" method="POST" class="form-grid" id="form-conductor">
+            <div class="form-group">
+                <input type="text" name="nombre" placeholder="Nombre completo" required>
+            </div>
+            <div class="form-group">
+                <input type="email" name="email" placeholder="Email" required>
+            </div>
+            <div class="form-group">
+                <input type="text" name="dni" placeholder="DNI" required>
+            </div>
+            <div class="form-group">
+                <input type="text" name="licencia" placeholder="N° Licencia" required>
+            </div>
+            <div class="form-group">
+                <input type="text" name="telefono" placeholder="Teléfono">
+            </div>
+            <div class="form-group">
+                <input type="text" name="direccion" placeholder="Dirección">
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Registrar Conductor</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Lista de conductores -->
+    <div class="table-container">
+        <h3>📋 Conductores Registrados</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>DNI</th>
+                    <th>Licencia</th>
+                    <th>Teléfono</th>
+                    <th>Puntos</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each conductores}}
+                <tr>
+                    <td>{{this.nombre}}</td>
+                    <td>{{this.email}}</td>
+                    <td>{{this.dni}}</td>
+                    <td>{{this.licencia}}</td>
+                    <td>{{this.telefono}}</td>
+                    <td>{{this.puntos}}</td>
+                    <td>
+                        <span class="badge {{#if this.habilitado}}badge-success{{else}}badge-danger{{/if}}">
+                            {{#if this.habilitado}}Habilitado{{else}}Inhabilitado{{/if}}
+                        </span>
+                    </td>
+                    <td class="actions">
+                        <button class="btn btn-danger btn-sm" 
+                                onclick="eliminarConductor('{{this._id}}', '{{this.nombre}}')">
+                            🗑️ Eliminar
+                        </button>
+                    </td>
+                </tr>
+                {{else}}
+                <tr>
+                    <td colspan="8" class="text-center">No hay conductores registrados</td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+</div>
