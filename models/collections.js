@@ -5,5 +5,4 @@ module.exports = {
   conductores: () => getCollection('conductores'),
   multas: () => getCollection('multas'),
   vehiculos: () => getCollection('vehiculos'),
-  antecedentes: () => getCollection('antecedentes')
 };
