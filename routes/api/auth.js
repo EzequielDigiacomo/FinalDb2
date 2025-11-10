@@ -15,8 +15,8 @@ router.post('/login', async (req, res) => {
     if (!usuario || !password) {
       // Renderizar la página de login con error
       return res.render('login', {
-        title: 'Iniciar Sesión - Sistema de Multas',
-        layout: false,
+        title: 'Iniciar Sesión',
+        layout: 'login',
         error: 'Usuario y contraseña son requeridos'
       });
     }
@@ -35,16 +35,16 @@ router.post('/login', async (req, res) => {
 
     // Si no coinciden las credenciales - renderizar con error
     return res.render('login', {
-      title: 'Iniciar Sesión - Sistema de Multas',
-      layout: false,
+      title: 'Iniciar Sesión',
+      layout: 'login',
       error: 'Credenciales inválidas. Use: alumno / alu123'
     });
 
   } catch (error) {
     console.error('Error en login:', error);
     res.render('login', {
-      title: 'Iniciar Sesión - Sistema de Multas',
-      layout: false,
+      title: 'Iniciar Sesión',
+      layout: 'login',
       error: 'Error interno del servidor'
     });
   }

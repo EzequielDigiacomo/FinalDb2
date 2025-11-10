@@ -52,7 +52,11 @@ router.post('/', requireAuth, async (req, res) => {
     const resultado = await conductores().insertOne(instanciaConductor);
     
     console.log('Conductor creado con ID:', resultado.insertedId);
-    res.redirect('/conductores');
+    res.json({ 
+      success: true,
+      message: 'Conductor registrado exitosamente',
+      conductorId: resultado.insertedId
+    });
     
   } catch (error) {
     console.error('Error creando conductor:', error);
@@ -63,21 +67,28 @@ router.post('/', requireAuth, async (req, res) => {
   }
 });
 
-// Obtener conductor por DNI
-router.get('/:dni', requireAuth, async (req, res) => {
+// Buscar conductor por DNI
+router.get('/buscar/:dni', requireAuth, async (req, res) => {
   try {
     const { dni } = req.params;
     const conductor = await conductores().findOne({ dni: dni });
     
     if (!conductor) {
-      return res.status(404).json({ error: 'Conductor no encontrado' });
+      return res.json({ 
+        success: false,
+        conductor: null 
+      });
     }
 
     res.json({
+      success: true,
       conductor
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
   }
 });
 

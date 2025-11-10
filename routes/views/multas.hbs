@@ -1,45 +1,111 @@
-<div class="multas-page">
-    <h2>📝 Gestión de Multas</h2>
+<div class="multas-page fade-in">
+    <h2>
+        <svg class="icon-lg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        Gestión de Multas
+    </h2>
     
-    <!-- Formulario para agregar multa -->
     <div class="form-container">
-        <h3>➕ Cargar Nueva Multa</h3>
+        <h3>
+            <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Cargar Nueva Multa
+        </h3>
         <form action="/api/multas" method="POST" class="form-grid" id="form-multa">
             <div class="form-group">
-                <input type="text" name="dniConductor" placeholder="DNI Conductor" required 
-                       id="dni-buscar">
+                <label for="dni-buscar">DNI del Conductor</label>
+                <input type="text" name="dniConductor" placeholder="Ingrese DNI" required id="dni-buscar" maxlength="8">
                 <div id="info-conductor"></div>
             </div>
             <div class="form-group">
-                <input type="text" name="placaVehiculo" placeholder="Placa Vehículo" required
-                       id="placa-buscar">
+                <label for="placa-buscar">Placa del Vehículo</label>
+                <input type="text" name="placaVehiculo" placeholder="Ingrese placa" required id="placa-buscar">
                 <div id="info-vehiculo"></div>
             </div>
             <div class="form-group">
-                <input type="text" name="motivo" placeholder="Motivo de la multa" required>
+                <label for="motivo">Motivo de la Multa</label>
+                <select name="motivo" id="motivo" class="form-select" required>
+                    <option value="">Seleccionar motivo</option>
+                    <optgroup label="Infracciones Leves">
+                        <option value="Estacionamiento indebido">Estacionamiento indebido</option>
+                        <option value="No usar cinturón de seguridad">No usar cinturón de seguridad</option>
+                        <option value="Luces apagadas de noche">Luces apagadas de noche</option>
+                        <option value="Documentación vencida">Documentación vencida</option>
+                    </optgroup>
+                    <optgroup label="Infracciones Medias">
+                        <option value="Exceso de velocidad moderado">Exceso de velocidad moderado (10-20 km/h)</option>
+                        <option value="Usar celular mientras conduce">Usar celular mientras conduce</option>
+                        <option value="No respetar semáforo en amarillo">No respetar semáforo en amarillo</option>
+                        <option value="Giro prohibido">Giro prohibido</option>
+                    </optgroup>
+                    <optgroup label="Infracciones Graves">
+                        <option value="Exceso de velocidad grave">Exceso de velocidad grave (20-40 km/h)</option>
+                        <option value="Pasarse semáforo en rojo">Pasarse semáforo en rojo</option>
+                        <option value="Conducir sin licencia">Conducir sin licencia</option>
+                        <option value="Maniobra peligrosa">Maniobra peligrosa</option>
+                    </optgroup>
+                    <optgroup label="Infracciones Muy Graves">
+                        <option value="Conducir en estado de ebriedad">Conducir en estado de ebriedad</option>
+                        <option value="Exceso de velocidad extremo">Exceso de velocidad extremo (+40 km/h)</option>
+                        <option value="Conducir bajo efectos de drogas">Conducir bajo efectos de drogas</option>
+                        <option value="Fuga del lugar del accidente">Fuga del lugar del accidente</option>
+                    </optgroup>
+                    <option value="otro">Otro (especificar en observaciones)</option>
+                </select>
             </div>
             <div class="form-group">
-                <input type="number" name="monto" placeholder="Monto $" min="0" step="0.01" required>
+                <label for="monto">Monto ($)</label>
+                <input type="number" name="monto" id="monto" placeholder="0.00" min="0" step="0.01" required>
             </div>
             <div class="form-group">
+                <label for="gravedad">Gravedad</label>
                 <select name="gravedad" class="form-select" required id="gravedad">
                     <option value="">Seleccionar gravedad</option>
-                    <option value="leve">Leve</option>
-                    <option value="media">Media</option>
-                    <option value="grave">Grave</option>
-                    <option value="muy_grave">Muy Grave</option>
+                    <option value="leve">Leve (1 punto)</option>
+                    <option value="media">Media (3 puntos)</option>
+                    <option value="grave">Grave (5 puntos)</option>
+                    <option value="muy_grave">Muy Grave (8 puntos)</option>
                 </select>
-                <div id="info-puntos" class="badge gravedad-leve">Puntos a descontar: 1</div>
+                <div id="info-puntos" class="badge gravedad-leve" style="display: none; margin-top: 8px;">Puntos a descontar: 1</div>
             </div>
             <div class="form-actions">
-                <button type="submit" class="btn btn-warning">Cargar Multa</button>
+                <button type="submit" class="btn btn-warning">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    Cargar Multa
+                </button>
             </div>
         </form>
     </div>
 
-    <!-- Lista de multas -->
     <div class="table-container">
-        <h3>📋 Multas Registradas</h3>
+        <div class="table-header">
+            <h3>
+                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                </svg>
+                Multas Registradas
+            </h3>
+            <div class="table-actions">
+                <span class="badge badge-warning">Pendientes: {{multasPendientes}}</span>
+                <span class="badge badge-success">Pagas: {{multasPagas}}</span>
+            </div>
+        </div>
         <table>
             <thead>
                 <tr>
@@ -50,7 +116,7 @@
                     <th>Monto</th>
                     <th>Gravedad</th>
                     <th>Estado</th>
-                    <th>Acciones</th>
+                    <th class="text-center">Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -58,33 +124,48 @@
                 <tr>
                     <td>{{formatDate this.fechaInfraccion}}</td>
                     <td>{{this.dniConductor}}</td>
-                    <td>{{this.placaVehiculo}}</td>
+                    <td><strong>{{this.placaVehiculo}}</strong></td>
                     <td>{{this.motivo}}</td>
-                    <td>{{formatCurrency this.monto}}</td>
-                    <td>
-                        <span class="badge gravedad-{{this.gravedad}}">
-                            {{this.gravedad}}
-                        </span>
-                    </td>
+                    <td><strong>{{formatCurrency this.monto}}</strong></td>
+                    <td><span class="badge gravedad-{{this.gravedad}}">{{this.gravedad}}</span></td>
                     <td>
                         <span class="badge {{#if this.pagada}}badge-success{{else}}badge-warning{{/if}}">
-                            {{#if this.pagada}}Pagada{{else}}Pendiente{{/if}}
+                            {{#if this.pagada}}
+                                <svg class="icon" style="width: 14px; height: 14px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                Pagada
+                            {{else}}
+                                <svg class="icon" style="width: 14px; height: 14px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                                Pendiente
+                            {{/if}}
                         </span>
                     </td>
-                    <td>
+                    <td class="actions">
                         {{#unless this.pagada}}
-                        <button type="button" class="btn btn-success btn-sm" 
-                                onclick="confirmarPagoMulta('{{this._id}}', '{{this.monto}}')">
-                            Marcar como Pagada
+                        <button type="button" class="btn btn-success btn-sm" onclick="confirmarPagoMulta('{{this._id}}', '{{this.monto}}')">
+                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="1" x2="12" y2="23"></line>
+                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                            </svg>
+                            Marcar Pagada
                         </button>
                         {{else}}
-                        <span class="text-muted">Pagada</span>
+                        <span class="text-muted">
+                            <svg class="icon" style="width: 16px; height: 16px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            Completada
+                        </span>
                         {{/unless}}
                     </td>
                 </tr>
                 {{else}}
                 <tr>
-                    <td colspan="8" class="text-center">No hay multas registradas</td>
+                    <td colspan="8" class="text-center text-muted">No hay multas registradas.</td>
                 </tr>
                 {{/each}}
             </tbody>

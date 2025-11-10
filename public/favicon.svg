@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect width="100" height="100" fill="#5a67d8" rx="20"/>
+  <g fill="white" stroke="white" stroke-width="2">
+    <!-- Document/File icon representing multas -->
+    <path d="M30 20 H55 L70 35 V80 H30 Z" fill="white"/>
+    <path d="M55 20 V35 H70" fill="#5a67d8"/>
+    <!-- Lines representing text -->
+    <line x1="40" y1="50" x2="60" y2="50" stroke="#5a67d8" stroke-width="2"/>
+    <line x1="40" y1="60" x2="60" y2="60" stroke="#5a67d8" stroke-width="2"/>
+    <line x1="40" y1="70" x2="55" y2="70" stroke="#5a67d8" stroke-width="2"/>
+  </g>
+</svg>
+

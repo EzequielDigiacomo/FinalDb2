@@ -1,37 +1,75 @@
-<div class="conductores-page">
-    <h2>👨‍💼 Gestión de Conductores</h2>
+<div class="conductores-page fade-in">
+    <h2>
+        <svg class="icon-lg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+        Gestión de Conductores
+    </h2>
     
-    <!-- Formulario para agregar conductor -->
     <div class="form-container">
-        <h3>➕ Registrar Nuevo Conductor</h3>
+        <h3>
+            <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Registrar Nuevo Conductor
+        </h3>
         <form action="/api/conductores" method="POST" class="form-grid" id="form-conductor">
             <div class="form-group">
-                <input type="text" name="nombre" placeholder="Nombre completo" required>
+                <label for="nombre">Nombre Completo</label>
+                <input type="text" id="nombre" name="nombre" placeholder="Ej: Juan Pérez" required>
             </div>
             <div class="form-group">
-                <input type="email" name="email" placeholder="Email" required>
+                <label for="email">Correo Electrónico</label>
+                <input type="email" id="email" name="email" placeholder="ejemplo@correo.com" required>
             </div>
             <div class="form-group">
-                <input type="text" name="dni" placeholder="DNI" required>
+                <label for="dni">DNI</label>
+                <input type="text" id="dni" name="dni" placeholder="12345678" maxlength="8" required>
             </div>
             <div class="form-group">
-                <input type="text" name="licencia" placeholder="N° Licencia" required>
+                <label for="licencia">Número de Licencia</label>
+                <input type="text" id="licencia" name="licencia" placeholder="A-12345678" required>
             </div>
             <div class="form-group">
-                <input type="text" name="telefono" placeholder="Teléfono">
+                <label for="telefono">Teléfono</label>
+                <input type="tel" id="telefono" name="telefono" placeholder="(351) 123-4567">
             </div>
             <div class="form-group">
-                <input type="text" name="direccion" placeholder="Dirección">
+                <label for="direccion">Dirección</label>
+                <input type="text" id="direccion" name="direccion" placeholder="Calle, Número, Ciudad">
             </div>
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Registrar Conductor</button>
+                <button type="submit" class="btn btn-primary">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    Registrar Conductor
+                </button>
             </div>
         </form>
     </div>
 
-    <!-- Lista de conductores -->
     <div class="table-container">
-        <h3>📋 Conductores Registrados</h3>
+        <div class="table-header">
+            <h3>
+                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                </svg>
+                Conductores Registrados
+            </h3>
+            <div class="table-actions">
+                <span class="badge badge-info">Total: {{conductores.length}}</span>
+            </div>
+        </div>
         <table>
             <thead>
                 <tr>
@@ -42,33 +80,57 @@
                     <th>Teléfono</th>
                     <th>Puntos</th>
                     <th>Estado</th>
-                    <th>Acciones</th>
+                    <th class="text-center">Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 {{#each conductores}}
                 <tr>
-                    <td>{{this.nombre}}</td>
+                    <td><strong>{{this.nombre}}</strong></td>
                     <td>{{this.email}}</td>
                     <td>{{this.dni}}</td>
                     <td>{{this.licencia}}</td>
                     <td>{{this.telefono}}</td>
-                    <td>{{this.puntos}}</td>
+                    <td>
+                        {{#if (gt this.puntos 5)}}
+                            <span class="badge badge-success">{{this.puntos}} pts</span>
+                        {{else}}
+                            {{#if (gt this.puntos 2)}}
+                                <span class="badge badge-warning">{{this.puntos}} pts</span>
+                            {{else}}
+                                <span class="badge badge-danger">{{this.puntos}} pts</span>
+                            {{/if}}
+                        {{/if}}
+                    </td>
                     <td>
                         <span class="badge {{#if this.habilitado}}badge-success{{else}}badge-danger{{/if}}">
-                            {{#if this.habilitado}}Habilitado{{else}}Inhabilitado{{/if}}
+                            {{#if this.habilitado}}
+                                <svg class="icon" style="width: 14px; height: 14px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                Habilitado
+                            {{else}}
+                                <svg class="icon" style="width: 14px; height: 14px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                                Inhabilitado
+                            {{/if}}
                         </span>
                     </td>
                     <td class="actions">
-                        <button class="btn btn-danger btn-sm" 
-                                onclick="eliminarConductor('{{this._id}}', '{{this.nombre}}')">
-                            🗑️ Eliminar
+                        <button class="btn btn-danger btn-sm" onclick="eliminarConductor('{{this._id}}', '{{this.nombre}}')">
+                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            Eliminar
                         </button>
                     </td>
                 </tr>
                 {{else}}
                 <tr>
-                    <td colspan="8" class="text-center">No hay conductores registrados</td>
+                    <td colspan="8" class="text-center text-muted">No hay conductores registrados. ¡Agregue el primero!</td>
                 </tr>
                 {{/each}}
             </tbody>
