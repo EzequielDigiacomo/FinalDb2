@@ -1,405 +1,303 @@
-const express = require('express');
-const session = require('express-session');
-const path = require('path');
-const { engine } = require('express-handlebars');
-require('dotenv').config();
+// ==========================================
+// SISTEMA DE GESTIÓN DE MULTAS - FRONTEND
+// ==========================================
 
-// Importar conexión a BD
-const { connectDB } = require('./config/db');
-
-// Importar rutas
-const authRoutes = require('./routes/auth');
-const conductoresRoutes = require('./routes/conductores');
-const vehiculosRoutes = require('./routes/vehiculos');
-const multasRoutes = require('./routes/multas');
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Configurar Handlebars
-app.engine('hbs', engine({
-    extname: '.hbs',
-    defaultLayout: 'main',
-    layoutsDir: path.join(__dirname, 'views/layouts'),
-    partialsDir: path.join(__dirname, 'views/partials'),
-    helpers: {
-        eq: (a, b) => a === b,
-        formatDate: (date) => new Date(date).toLocaleDateString('es-AR'),
-        formatCurrency: (amount) => '$' + parseFloat(amount).toLocaleString('es-AR'),
-        ifCond: function (v1, operator, v2, options) {
-            switch (operator) {
-                case '==':
-                    return (v1 == v2) ? options.fn(this) : options.inverse(this);
-                case '===':
-                    return (v1 === v2) ? options.fn(this) : options.inverse(this);
-                case '!=':
-                    return (v1 != v2) ? options.fn(this) : options.inverse(this);
-                case '!==':
-                    return (v1 !== v2) ? options.fn(this) : options.inverse(this);
-                case '<':
-                    return (v1 < v2) ? options.fn(this) : options.inverse(this);
-                case '<=':
-                    return (v1 <= v2) ? options.fn(this) : options.inverse(this);
-                case '>':
-                    return (v1 > v2) ? options.fn(this) : options.inverse(this);
-                case '>=':
-                    return (v1 >= v2) ? options.fn(this) : options.inverse(this);
-                case '&&':
-                    return (v1 && v2) ? options.fn(this) : options.inverse(this);
-                case '||':
-                    return (v1 || v2) ? options.fn(this) : options.inverse(this);
-                default:
-                    return options.inverse(this);
-            }
+/**
+ * SISTEMA DE TOAST NOTIFICATIONS
+ */
+const Toast = {
+    container: null,
+    
+    init() {
+        if (!this.container) {
+            this.container = document.createElement('div');
+            this.container.className = 'toast-container';
+            document.body.appendChild(this.container);
         }
-    }
-}));
-app.set('view engine', 'hbs');
-app.set('views', path.join(__dirname, 'views'));
-
-// Conectar a la base de datos
-connectDB().then(() => {
-    console.log('📦 Sistema de Multas inicializado correctamente');
-});
-
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Configuración de sesiones
-app.use(session({
-    secret: process.env.SESSION_SECRET || 'sistema-multas-secret-key',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { 
-        secure: false,
-        maxAge: 24 * 60 * 60 * 1000
-    }
-}));
-
-// Middleware para inyectar usuario en todas las vistas
-app.use((req, res, next) => {
-    res.locals.user = req.session.user || null;
-    res.locals.currentPath = req.path;
-    next();
-});
-
-// Rutas de la API
-app.use('/api/auth', authRoutes);
-app.use('/api/conductores', conductoresRoutes);
-app.use('/api/vehiculos', vehiculosRoutes);
-app.use('/api/multas', multasRoutes);
-
-// ================= RUTAS DE VISTAS =================
-
-// Página de login
-app.get('/login', (req, res) => {
-    if (req.session.user) {
-        return res.redirect('/');
-    }
-    res.render('login', { 
-        title: 'Iniciar Sesión - Sistema de Multas',
-        layout: false 
-    });
-});
-
-// Página principal (requiere autenticación)
-app.get('/', requireAuth, async (req, res) => {
-    try {
-        // Obtener datos para el dashboard
-        const { getCollection } = require('./config/db');
-        const db = getCollection;
+    },
+    
+    show(message, type = 'info', duration = 5000) {
+        this.init();
         
-        const totalConductores = await db('conductores').countDocuments();
-        const totalVehiculos = await db('vehiculos').countDocuments();
-        const totalMultas = await db('multas').countDocuments();
-        const multasPendientes = await db('multas').countDocuments({ pagada: false });
-
-        res.render('dashboard', {
-            title: 'Dashboard - Sistema de Multas',
-            totalConductores,
-            totalVehiculos,
-            totalMultas,
-            multasPendientes
-        });
-    } catch (error) {
-        console.error('Error cargando dashboard:', error);
-        res.render('dashboard', {
-            title: 'Dashboard - Sistema de Multas',
-            totalConductores: 0,
-            totalVehiculos: 0,
-            totalMultas: 0,
-            multasPendientes: 0
-        });
-    }
-});
-
-// Página de conductores
-app.get('/conductores', requireAuth, async (req, res) => {
-    try {
-        const { conductores } = require('./models/collections');
-        const listaConductores = await conductores().find().toArray();
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
         
-        res.render('conductores', {
-            title: 'Gestión de Conductores',
-            conductores: listaConductores
-        });
-    } catch (error) {
-        console.error('Error cargando conductores:', error);
-        res.render('conductores', {
-            title: 'Gestión de Conductores',
-            conductores: []
-        });
-    }
-});
-
-// Página de vehículos
-app.get('/vehiculos', requireAuth, async (req, res) => {
-    try {
-        const { vehiculos } = require('./models/collections');
-        const listaVehiculos = await vehiculos().find().toArray();
+        const icons = {
+            success: '<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>',
+            error: '<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>',
+            warning: '<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>',
+            info: '<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>'
+        };
         
-        res.render('vehiculos', {
-            title: 'Gestión de Vehículos',
-            vehiculos: listaVehiculos
-        });
-    } catch (error) {
-        console.error('Error cargando vehículos:', error);
-        res.render('vehiculos', {
-            title: 'Gestión de Vehículos',
-            vehiculos: []
-        });
-    }
-});
-
-// Página de multas
-app.get('/multas', requireAuth, async (req, res) => {
-    try {
-        const { multas, conductores, vehiculos } = require('./models/collections');
-        const listaMultas = await multas().find().sort({ fechaInfraccion: -1 }).toArray();
-        const listaConductores = await conductores().find().toArray();
-        const listaVehiculos = await vehiculos().find().toArray();
+        toast.innerHTML = `
+            ${icons[type] || icons.info}
+            <div class="toast-content">
+                <div class="toast-message">${message}</div>
+            </div>
+            <button class="toast-close" onclick="this.parentElement.remove()">
+                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        `;
         
-        res.render('multas', {
-            title: 'Gestión de Multas',
-            multas: listaMultas,
-            conductores: listaConductores,
-            vehiculos: listaVehiculos
-        });
-    } catch (error) {
-        console.error('Error cargando multas:', error);
-        res.render('multas', {
-            title: 'Gestión de Multas',
-            multas: [],
-            conductores: [],
-            vehiculos: []
-        });
-    }
-});
-
-// Página de estadísticas
-app.get('/estadisticas', requireAuth, async (req, res) => {
-    try {
-        const { multas } = require('./models/collections');
+        this.container.appendChild(toast);
         
-        const totalMultas = await multas().countDocuments();
-        const multasPagadas = await multas().countDocuments({ pagada: true });
-        const multasPendientes = await multas().countDocuments({ pagada: false });
-        
-        const multasPorGravedad = await multas().aggregate([
-            {
-                $group: {
-                    _id: '$gravedad',
-                    count: { $sum: 1 },
-                    totalRecaudado: { $sum: '$monto' }
-                }
-            }
-        ]).toArray();
-
-        res.render('estadisticas', {
-            title: 'Estadísticas del Sistema',
-            totalMultas,
-            multasPagadas,
-            multasPendientes,
-            multasPorGravedad,
-            recaudacionTotal: multasPorGravedad.reduce((sum, item) => sum + item.totalRecaudado, 0)
-        });
-    } catch (error) {
-        console.error('Error cargando estadísticas:', error);
-        res.render('estadisticas', {
-            title: 'Estadísticas del Sistema',
-            totalMultas: 0,
-            multasPagadas: 0,
-            multasPendientes: 0,
-            multasPorGravedad: [],
-            recaudacionTotal: 0
-        });
+        // Auto-cerrar
+        if (duration > 0) {
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight 0.3s ease-in';
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+    },
+    
+    success(message, duration) {
+        this.show(message, 'success', duration);
+    },
+    
+    error(message, duration) {
+        this.show(message, 'error', duration);
+    },
+    
+    warning(message, duration) {
+        this.show(message, 'warning', duration);
+    },
+    
+    info(message, duration) {
+        this.show(message, 'info', duration);
     }
-});
-
-// Middleware de autenticación para vistas
-function requireAuth(req, res, next) {
-    if (req.session && req.session.user) {
-        return next();
-    }
-    res.redirect('/login');
-}
-
-// Ruta para verificar estado del sistema
-app.get('/api/status', (req, res) => {
-    res.json({
-        status: 'online',
-        system: 'Sistema de Gestión de Multas',
-        version: '1.0.0',
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'development'
-    });
-});
-
-app.listen(PORT, () => {
-    console.log(`🚓 Servidor de Multas corriendo en puerto ${PORT}`);
-    console.log(`📍 URL: http://localhost:${PORT}`);
-    console.log(`👤 Usuario de prueba: alumno / alu123`);
-});
-
-// public/js/app.js - Todas las funcionalidades JavaScript del cliente
+};
 
 /**
- * FUNCIONES PARA GESTIÓN DE CONDUCTORES
+ * SISTEMA DE MODAL DE CONFIRMACIÓN
  */
+const Modal = {
+    show(title, message, onConfirm, onCancel) {
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay active';
+        
+        overlay.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        ${title}
+                    </h3>
+                </div>
+                <div class="modal-body">
+                    ${message}
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-cancel" id="modal-cancel">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                        Cancelar
+                    </button>
+                    <button class="btn btn-danger" id="modal-confirm">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        Confirmar
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(overlay);
+        
+        // Event listeners
+        const confirmBtn = overlay.querySelector('#modal-confirm');
+        const cancelBtn = overlay.querySelector('#modal-cancel');
+        
+        confirmBtn.addEventListener('click', () => {
+            overlay.remove();
+            if (onConfirm) onConfirm();
+        });
+        
+        cancelBtn.addEventListener('click', () => {
+            overlay.remove();
+            if (onCancel) onCancel();
+        });
+        
+        // Cerrar al hacer click fuera del modal
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.remove();
+                if (onCancel) onCancel();
+            }
+        });
+    }
+};
 
-// Eliminar conductor con confirmación
+/**
+ * MANEJO DE ERRORES DE AUTENTICACIÓN
+ */
+function handleAuthError(data) {
+    if (data.redirectTo === '/login') {
+        Toast.error('Sesión expirada. Redirigiendo al login...');
+        setTimeout(() => {
+            window.location.href = '/login';
+        }, 2000);
+        return true;
+    }
+    return false;
+}
+
+/**
+ * GESTIÓN DE CONDUCTORES
+ */
 function eliminarConductor(id, nombre) {
-    if (confirm(`¿Estás seguro de que quieres eliminar al conductor "${nombre}"? Esta acción no se puede deshacer.`)) {
-        fetch(`/api/conductores/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                mostrarMensaje('Conductor eliminado exitosamente', 'success');
-                setTimeout(() => {
-                    location.reload(); // Recargar la página para actualizar la lista
-                }, 1500);
-            } else {
-                mostrarMensaje('Error: ' + data.error, 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            mostrarMensaje('Error al eliminar el conductor', 'error');
-        });
-    }
-}
-
-// Editar conductor (si necesitas esta funcionalidad)
-function editarConductor(id) {
-    // Implementar lógica de edición
-    console.log('Editando conductor:', id);
-}
-
-/**
- * FUNCIONES PARA GESTIÓN DE VEHÍCULOS
- */
-
-// Eliminar vehículo con confirmación
-function eliminarVehiculo(id, placa) {
-    if (confirm(`¿Estás seguro de que quieres eliminar el vehículo con placa "${placa}"? Esta acción no se puede deshacer.`)) {
-        fetch(`/api/vehiculos/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                mostrarMensaje('Vehículo eliminado exitosamente', 'success');
-                setTimeout(() => {
-                    location.reload();
-                }, 1500);
-            } else {
-                mostrarMensaje('Error: ' + data.error, 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            mostrarMensaje('Error al eliminar el vehículo', 'error');
-        });
-    }
-}
-
-// Validar formato de placa
-function validarPlaca(placa) {
-    const regexPlaca = /^[A-Z]{3}\d{3}$|^[A-Z]{2}\d{3}[A-Z]{2}$/;
-    return regexPlaca.test(placa.toUpperCase());
-}
-
-// Auto-formatear placa mientras se escribe
-function formatearPlaca(input) {
-    input.value = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-}
-
-/**
- * FUNCIONES PARA GESTIÓN DE MULTAS
- */
-
-// Confirmar pago de multa
-function confirmarPagoMulta(id, monto) {
-    if (confirm(`¿Marcar esta multa de $${monto} como pagada?`)) {
-        fetch(`/api/multas/${id}/pagar`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => {
-            if (response.redirected) {
-                window.location.href = response.url;
-            } else {
+    Modal.show(
+        'Confirmar Eliminación',
+        `¿Estás seguro de que deseas eliminar al conductor <strong>"${nombre}"</strong>?<br><br>Esta acción no se puede deshacer.`,
+        () => {
+            fetch(`/api/conductores/${id}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin' // Importante: enviar cookies de sesión
+            })
+            .then(response => {
+                if (response.status === 401) {
+                    return response.json().then(data => {
+                        handleAuthError(data);
+                        throw new Error('No autorizado');
+                    });
+                }
                 return response.json();
-            }
-        })
-        .then(data => {
-            if (data && data.success) {
-                mostrarMensaje('Multa marcada como pagada', 'success');
-                setTimeout(() => {
-                    location.reload();
-                }, 1500);
-            } else if (data && data.error) {
-                mostrarMensaje('Error: ' + data.error, 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            mostrarMensaje('Error al procesar el pago', 'error');
-        });
-    }
-    return false; // Prevenir envío del formulario
+            })
+            .then(data => {
+                if (data.success) {
+                    Toast.success('Conductor eliminado exitosamente');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    Toast.error(data.error || 'Error al eliminar el conductor');
+                }
+            })
+            .catch(error => {
+                if (error.message !== 'No autorizado') {
+                    console.error('Error:', error);
+                    Toast.error('Error de conexión al eliminar el conductor');
+                }
+            });
+        }
+    );
 }
 
-// Buscar conductor por DNI para multas
+/**
+ * GESTIÓN DE VEHÍCULOS
+ */
+function eliminarVehiculo(id, placa) {
+    Modal.show(
+        'Confirmar Eliminación',
+        `¿Estás seguro de que deseas eliminar el vehículo con placa <strong>"${placa}"</strong>?<br><br>Esta acción no se puede deshacer.`,
+        () => {
+            fetch(`/api/vehiculos/${id}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (response.status === 401) {
+                    return response.json().then(data => {
+                        handleAuthError(data);
+                        throw new Error('No autorizado');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    Toast.success('Vehículo eliminado exitosamente');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    Toast.error(data.error || 'Error al eliminar el vehículo');
+                }
+            })
+            .catch(error => {
+                if (error.message !== 'No autorizado') {
+                    console.error('Error:', error);
+                    Toast.error('Error de conexión al eliminar el vehículo');
+                }
+            });
+        }
+    );
+}
+
+/**
+ * GESTIÓN DE MULTAS
+ */
+function confirmarPagoMulta(id, monto) {
+    Modal.show(
+        'Confirmar Pago de Multa',
+        `¿Deseas marcar esta multa de <strong>$${monto}</strong> como pagada?`,
+        () => {
+            fetch(`/api/multas/${id}/pagar`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (response.status === 401) {
+                    return response.json().then(data => {
+                        handleAuthError(data);
+                        throw new Error('No autorizado');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    Toast.success('Multa marcada como pagada');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    Toast.error(data.error || 'Error al procesar el pago');
+                }
+            })
+            .catch(error => {
+                if (error.message !== 'No autorizado') {
+                    console.error('Error:', error);
+                    Toast.error('Error de conexión al procesar el pago');
+                }
+            });
+        }
+    );
+}
+
+// Buscar conductor por DNI
 async function buscarConductor(dni) {
-    if (!dni) return;
+    if (!dni || dni.length < 7) {
+        document.getElementById('info-conductor').innerHTML = '';
+        return;
+    }
     
     try {
-        const response = await fetch(`/api/conductores/${dni}`);
+        const response = await fetch(`/api/conductores/buscar/${dni}`);
         const data = await response.json();
         
+        const infoDiv = document.getElementById('info-conductor');
         if (data.conductor) {
-            document.getElementById('info-conductor').innerHTML = `
-                <div class="alert alert-info">
-                    <strong>Conductor encontrado:</strong> ${data.conductor.nombre} 
-                    - Puntos: ${data.conductor.puntos}
+            infoDiv.innerHTML = `
+                <div class="alert alert-info" style="margin-top: 8px;">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    <strong>Encontrado:</strong> ${data.conductor.nombre} - Puntos: ${data.conductor.puntos}
                 </div>
             `;
         } else {
-            document.getElementById('info-conductor').innerHTML = `
-                <div class="alert alert-warning">
+            infoDiv.innerHTML = `
+                <div class="alert alert-warning" style="margin-top: 8px;">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
                     Conductor no encontrado
                 </div>
             `;
@@ -409,24 +307,37 @@ async function buscarConductor(dni) {
     }
 }
 
-// Buscar vehículo por placa para multas
+// Buscar vehículo por placa
 async function buscarVehiculo(placa) {
-    if (!placa) return;
+    if (!placa || placa.length < 3) {
+        document.getElementById('info-vehiculo').innerHTML = '';
+        return;
+    }
     
     try {
-        const response = await fetch(`/api/vehiculos/${placa}`);
+        const response = await fetch(`/api/vehiculos/buscar/${placa}`);
         const data = await response.json();
         
+        const infoDiv = document.getElementById('info-vehiculo');
         if (data.vehiculo) {
-            document.getElementById('info-vehiculo').innerHTML = `
-                <div class="alert alert-info">
-                    <strong>Vehículo encontrado:</strong> ${data.vehiculo.marca} ${data.vehiculo.modelo} 
-                    - ${data.vehiculo.color} (${data.vehiculo.año})
+            infoDiv.innerHTML = `
+                <div class="alert alert-info" style="margin-top: 8px;">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"></path>
+                        <circle cx="6.5" cy="16.5" r="2.5"></circle>
+                        <circle cx="16.5" cy="16.5" r="2.5"></circle>
+                    </svg>
+                    <strong>Encontrado:</strong> ${data.vehiculo.marca} ${data.vehiculo.modelo} - ${data.vehiculo.color} (${data.vehiculo.año})
                 </div>
             `;
         } else {
-            document.getElementById('info-vehiculo').innerHTML = `
-                <div class="alert alert-warning">
+            infoDiv.innerHTML = `
+                <div class="alert alert-warning" style="margin-top: 8px;">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
                     Vehículo no encontrado
                 </div>
             `;
@@ -436,174 +347,242 @@ async function buscarVehiculo(placa) {
     }
 }
 
-// Calcular puntos a descontar según gravedad
-function calcularPuntosDescontados(gravedad) {
-    const puntos = {
-        'leve': 1,
-        'media': 3,
-        'grave': 5,
-        'muy_grave': 10
-    };
-    return puntos[gravedad] || 1;
-}
-
-// Actualizar información de puntos al cambiar gravedad
+// Actualizar información de puntos según gravedad
 function actualizarInfoPuntos() {
     const gravedadSelect = document.getElementById('gravedad');
     const infoPuntos = document.getElementById('info-puntos');
     
-    if (gravedadSelect && infoPuntos) {
-        const puntos = calcularPuntosDescontados(gravedadSelect.value);
-        infoPuntos.textContent = `Puntos a descontar: ${puntos}`;
+    if (gravedadSelect && infoPuntos && gravedadSelect.value) {
+        const puntos = {
+            'leve': 1,
+            'media': 3,
+            'grave': 5,
+            'muy_grave': 8
+        };
+        
+        infoPuntos.textContent = `Puntos a descontar: ${puntos[gravedadSelect.value] || 1}`;
         infoPuntos.className = `badge gravedad-${gravedadSelect.value}`;
+        infoPuntos.style.display = 'inline-flex';
+    }
+}
+
+// Sugerir gravedad y monto según motivo de la multa
+function sugerirGravedadYMonto() {
+    const motivoSelect = document.getElementById('motivo');
+    const gravedadSelect = document.getElementById('gravedad');
+    const montoInput = document.getElementById('monto');
+    
+    if (!motivoSelect || !gravedadSelect || !montoInput) return;
+    
+    const motivo = motivoSelect.value;
+    
+    // Mapeo de motivos a gravedad y monto sugerido
+    const sugerencias = {
+        // Leves
+        'Estacionamiento indebido': { gravedad: 'leve', monto: 5000 },
+        'No usar cinturón de seguridad': { gravedad: 'leve', monto: 8000 },
+        'Luces apagadas de noche': { gravedad: 'leve', monto: 6000 },
+        'Documentación vencida': { gravedad: 'leve', monto: 7000 },
+        
+        // Medias
+        'Exceso de velocidad moderado': { gravedad: 'media', monto: 15000 },
+        'Usar celular mientras conduce': { gravedad: 'media', monto: 12000 },
+        'No respetar semáforo en amarillo': { gravedad: 'media', monto: 10000 },
+        'Giro prohibido': { gravedad: 'media', monto: 9000 },
+        
+        // Graves
+        'Exceso de velocidad grave': { gravedad: 'grave', monto: 30000 },
+        'Pasarse semáforo en rojo': { gravedad: 'grave', monto: 25000 },
+        'Conducir sin licencia': { gravedad: 'grave', monto: 35000 },
+        'Maniobra peligrosa': { gravedad: 'grave', monto: 28000 },
+        
+        // Muy Graves
+        'Conducir en estado de ebriedad': { gravedad: 'muy_grave', monto: 80000 },
+        'Exceso de velocidad extremo': { gravedad: 'muy_grave', monto: 60000 },
+        'Conducir bajo efectos de drogas': { gravedad: 'muy_grave', monto: 100000 },
+        'Fuga del lugar del accidente': { gravedad: 'muy_grave', monto: 90000 }
+    };
+    
+    const sugerencia = sugerencias[motivo];
+    
+    if (sugerencia) {
+        gravedadSelect.value = sugerencia.gravedad;
+        montoInput.value = sugerencia.monto;
+        actualizarInfoPuntos();
+        
+        // Resaltar que son valores sugeridos
+        montoInput.style.borderColor = 'var(--color-accent)';
+        setTimeout(() => {
+            montoInput.style.borderColor = '';
+        }, 2000);
     }
 }
 
 /**
- * FUNCIONES GENERALES Y UTILIDADES
+ * INTERCEPTAR ENVÍOS DE FORMULARIOS
  */
-
-// Mostrar mensajes al usuario
-function mostrarMensaje(mensaje, tipo = 'info') {
-    // Crear elemento de mensaje
-    const mensajeDiv = document.createElement('div');
-    mensajeDiv.className = `alert alert-${tipo} mensaje-flotante`;
-    mensajeDiv.textContent = mensaje;
+function interceptarFormularios() {
+    // Formulario de conductores
+    const formConductor = document.getElementById('form-conductor');
+    if (formConductor) {
+        formConductor.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(formConductor);
+            const data = Object.fromEntries(formData);
+            
+            try {
+                const response = await fetch('/api/conductores', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.status === 401) {
+                    const result = await response.json();
+                    handleAuthError(result);
+                    return;
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    Toast.success('Conductor registrado exitosamente');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    Toast.error(result.error || 'Error al registrar el conductor');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Toast.error('Error de conexión al registrar el conductor');
+            }
+        });
+    }
     
-    // Estilos para mensaje flotante
-    mensajeDiv.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 1000;
-        min-width: 300px;
-        animation: fadeInOut 5s ease-in-out;
-    `;
+    // Formulario de vehículos
+    const formVehiculo = document.querySelector('form[action="/api/vehiculos"]');
+    if (formVehiculo) {
+        formVehiculo.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(formVehiculo);
+            const data = Object.fromEntries(formData);
+            
+            try {
+                const response = await fetch('/api/vehiculos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.status === 401) {
+                    const result = await response.json();
+                    handleAuthError(result);
+                    return;
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    Toast.success('Vehículo registrado exitosamente');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    Toast.error(result.error || 'Error al registrar el vehículo');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Toast.error('Error de conexión al registrar el vehículo');
+            }
+        });
+    }
     
-    document.body.appendChild(mensajeDiv);
-    
-    // Remover después de 5 segundos
-    setTimeout(() => {
-        mensajeDiv.remove();
-    }, 5000);
-}
-
-// Confirmación antes de enviar formularios
-function confirmarEnvio(formId, mensaje = '¿Estás seguro de que quieres realizar esta acción?') {
-    const form = document.getElementById(formId);
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            if (!confirm(mensaje)) {
-                e.preventDefault();
+    // Formulario de multas
+    const formMulta = document.getElementById('form-multa');
+    if (formMulta) {
+        formMulta.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(formMulta);
+            const data = Object.fromEntries(formData);
+            
+            try {
+                const response = await fetch('/api/multas', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.status === 401) {
+                    const result = await response.json();
+                    handleAuthError(result);
+                    return;
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    Toast.success('Multa registrada exitosamente');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    Toast.error(result.error || 'Error al registrar la multa');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Toast.error('Error de conexión al registrar la multa');
             }
         });
     }
 }
 
-// Validar formularios
-function validarFormulario(formId) {
-    const form = document.getElementById(formId);
-    if (!form) return true;
-    
-    const inputs = form.querySelectorAll('input[required], select[required]');
-    let valido = true;
-    
-    inputs.forEach(input => {
-        if (!input.value.trim()) {
-            input.style.borderColor = 'var(--danger-color)';
-            valido = false;
-        } else {
-            input.style.borderColor = '';
-        }
-    });
-    
-    return valido;
-}
-
-// Cargar datos automáticamente
-async function cargarDatos(url, elementoId) {
-    try {
-        const response = await fetch(url);
-        const data = await response.json();
-        
-        const elemento = document.getElementById(elementoId);
-        if (elemento) {
-            // Aquí puedes procesar y mostrar los datos
-            console.log('Datos cargados:', data);
-        }
-    } catch (error) {
-        console.error('Error cargando datos:', error);
-    }
-}
-
-// Inicializar funcionalidades cuando el DOM esté listo
+/**
+ * INICIALIZACIÓN
+ */
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Sistema de Multas - JavaScript cargado');
+    console.log('✨ Sistema de Multas - Cargado');
     
-    // Inicializar eventos para multas
+    // Interceptar formularios
+    interceptarFormularios();
+    
+    // Eventos para multas
     const gravedadSelect = document.getElementById('gravedad');
     if (gravedadSelect) {
         gravedadSelect.addEventListener('change', actualizarInfoPuntos);
-        actualizarInfoPuntos(); // Ejecutar una vez al cargar
     }
     
-    // Inicializar búsquedas en tiempo real
+    const motivoSelect = document.getElementById('motivo');
+    if (motivoSelect) {
+        motivoSelect.addEventListener('change', sugerirGravedadYMonto);
+    }
+    
+    // Búsqueda en tiempo real de conductores
     const dniInput = document.getElementById('dni-buscar');
     if (dniInput) {
+        let dniTimer;
         dniInput.addEventListener('input', function() {
-            clearTimeout(this.timer);
-            this.timer = setTimeout(() => buscarConductor(this.value), 500);
+            clearTimeout(dniTimer);
+            dniTimer = setTimeout(() => buscarConductor(this.value), 500);
         });
     }
     
+    // Búsqueda en tiempo real de vehículos
     const placaInput = document.getElementById('placa-buscar');
     if (placaInput) {
+        let placaTimer;
         placaInput.addEventListener('input', function() {
-            clearTimeout(this.timer);
-            this.timer = setTimeout(() => buscarVehiculo(this.value), 500);
+            clearTimeout(placaTimer);
+            placaTimer = setTimeout(() => buscarVehiculo(this.value), 500);
         });
     }
-    
-    // Agregar estilos CSS para animaciones
-    const styles = document.createElement('style');
-    styles.textContent = `
-        @keyframes fadeInOut {
-            0% { opacity: 0; transform: translateY(-20px); }
-            10% { opacity: 1; transform: translateY(0); }
-            90% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-20px); }
-        }
-        
-        .mensaje-flotante {
-            animation: fadeInOut 5s ease-in-out;
-        }
-        
-        /* Mejoras para formularios */
-        input:invalid, select:invalid {
-            border-color: var(--danger-color) !important;
-        }
-        
-        input:valid, select:valid {
-            border-color: var(--success-color) !important;
-        }
-        
-        /* Efectos hover para tablas */
-        tr {
-            transition: background-color 0.3s ease;
-        }
-        
-        tr:hover {
-            background-color: #f8f9fa;
-        }
-    `;
-    document.head.appendChild(styles);
 });
 
-// Exportar funciones para uso global (si es necesario)
+// Exportar funciones globalmente
+window.Toast = Toast;
+window.Modal = Modal;
 window.eliminarConductor = eliminarConductor;
 window.eliminarVehiculo = eliminarVehiculo;
 window.confirmarPagoMulta = confirmarPagoMulta;
 window.buscarConductor = buscarConductor;
 window.buscarVehiculo = buscarVehiculo;
-window.mostrarMensaje = mostrarMensaje;
-window.validarFormulario = validarFormulario;

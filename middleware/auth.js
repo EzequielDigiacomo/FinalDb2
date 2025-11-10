@@ -1,9 +1,21 @@
-// Middleware de autenticación
+// Middleware de autenticación para API
 const requireAuth = (req, res, next) => {
+  // Verificar sesión
   if (req.session && req.session.user) {
     return next();
   }
-  res.status(401).json({ error: 'Acceso no autorizado. Debe iniciar sesión.' });
+  
+  // Si es una petición AJAX, devolver JSON
+  if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
+    return res.status(401).json({ 
+      success: false,
+      error: 'Acceso no autorizado. Debe iniciar sesión.',
+      redirectTo: '/login'
+    });
+  }
+  
+  // Si es una petición normal, redirigir
+  res.redirect('/login');
 };
 
 const requireRole = (role) => {

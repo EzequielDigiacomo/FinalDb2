@@ -64,7 +64,11 @@ router.post('/', requireAuth, async (req, res) => {
     const resultado = await multas().insertOne(instanciaMulta);
     
     console.log('Multa creada con ID:', resultado.insertedId);
-    res.redirect('/multas');
+    res.json({ 
+      success: true,
+      message: 'Multa registrada exitosamente',
+      multaId: resultado.insertedId
+    });
     
   } catch (error) {
     console.error('Error creando multa:', error);
@@ -112,14 +116,25 @@ router.post('/:id/pagar', requireAuth, async (req, res) => {
 
         console.log('Resultado de update:', result);
 
-        if (result.modifiedCount === 0) {
+        if (result.matchedCount === 0) {
             return res.status(404).json({ 
                 success: false, 
                 error: 'Multa no encontrada' 
             });
         }
 
-        res.redirect('/multas');
+        if (result.modifiedCount === 0) {
+            return res.status(200).json({ 
+                success: true, 
+                message: 'La multa ya estaba marcada como pagada',
+                alreadyPaid: true
+            });
+        }
+
+        res.json({ 
+            success: true, 
+            message: 'Multa marcada como pagada exitosamente' 
+        });
         
     } catch (error) {
         console.error('Error marcando multa como pagada:', error);
