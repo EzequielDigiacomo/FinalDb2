@@ -29,7 +29,7 @@ router.post('/login', async (req, res) => {
         loginTime: new Date()
       };
       
-      // REDIRIGIR AL DASHBOARD en lugar de enviar JSON
+      // REDIRIGIR AL DASHBOARD
       return res.redirect('/');
     }
 
@@ -50,7 +50,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Logout - MODIFICADO PARA REDIRIGIR
+// Logout - 
 router.post('/logout', (req, res) => {
   req.session.destroy((err) => {
     if (err) {
