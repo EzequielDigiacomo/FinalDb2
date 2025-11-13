@@ -14,7 +14,7 @@ router.get('/', requireAuth, async (req, res) => {
   }
 });
 
-// Registrar nuevo vehículo - ACTUALIZADO CON SCHEMA
+// Registrar nuevo vehículo
 router.post('/', requireAuth, async (req, res) => {
   try {
     // 1. Crear instancia del schema

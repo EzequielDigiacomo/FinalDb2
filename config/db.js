@@ -7,7 +7,6 @@ const client = new MongoClient(process.env.MONGODB_URI);
 const connectDB = async () => {
   try {
     await client.connect();
-    // Obtener el nombre de la base de datos de la URI automáticamente
     const dbName = new URL(process.env.MONGODB_URI).pathname.substring(1) || 'sistema_multas';
     db = client.db(dbName);
     console.log(`✅ Conectado a MongoDB Atlas - Base de datos: ${dbName}`);

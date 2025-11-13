@@ -16,8 +16,8 @@ const apiMultas = require("./routes/api/multas");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ================= CONFIGURACIÓN =================
-// Configurar Handlebars - ACTUALIZADO CON HELPER GT
+
+// Configurar Handlebars 
 app.engine(
   "hbs",
   engine({
@@ -30,7 +30,7 @@ app.engine(
         return a === b;
       },
       gt: function (a, b) {
-        // ← NUEVO HELPER AGREGADO
+        
         return a > b;
       },
       formatDate: function (date) {
@@ -50,7 +50,6 @@ connectDB().then(() => {
   console.log("📦 Sistema de Multas inicializado correctamente");
 });
 
-// ================= MIDDLEWARE =================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
@@ -91,13 +90,11 @@ const requireAuth = (req, res, next) => {
   res.redirect("/login");
 };
 
-// ================= RUTAS DE API =================
 app.use("/api/auth", apiAuth);
 app.use("/api/conductores", apiConductores);
 app.use("/api/vehiculos", apiVehiculos);
 app.use("/api/multas", apiMultas);
 
-// ================= RUTAS DE VISTAS =================
 // Login (pública)
 app.get("/login", (req, res) => {
   if (req.session.user) {
@@ -109,7 +106,7 @@ app.get("/login", (req, res) => {
   });
 });
 
-// Dashboard principal - ACTUALIZADO
+// Dashboard principal
 app.get("/", requireAuth, async (req, res) => {
   try {
     const { conductores, vehiculos, multas } = require("./models/collections");
@@ -134,10 +131,10 @@ app.get("/", requireAuth, async (req, res) => {
       totalVehiculos,
       totalMultas,
       multasPendientes,
-      multasPagas, // NUEVO
-      tasaPago, // NUEVO
-      conductoresHabilitados, // NUEVO
-      vehiculosActivos, // NUEVO
+      multasPagas, 
+      tasaPago, 
+      conductoresHabilitados, 
+      vehiculosActivos, 
     });
   } catch (error) {
     console.error("Error cargando dashboard:", error);
@@ -193,7 +190,7 @@ app.get("/vehiculos", requireAuth, async (req, res) => {
   }
 });
 
-// Página de multas - ACTUALIZADO
+// Página de multas 
 app.get("/multas", requireAuth, async (req, res) => {
   try {
     const { multas } = require("./models/collections");
@@ -202,7 +199,6 @@ app.get("/multas", requireAuth, async (req, res) => {
       .sort({ fechaInfraccion: -1 })
       .toArray();
 
-    // NUEVAS LÍNEAS PARA ESTADÍSTICAS EN HEADER
     const multasPendientes = listaMultas.filter((m) => !m.pagada).length;
     const multasPagas = listaMultas.filter((m) => m.pagada).length;
 
@@ -223,9 +219,6 @@ app.get("/multas", requireAuth, async (req, res) => {
   }
 });
 
-// Ruta de estadísticas eliminada - funcionalidad removida
-
-// ================= RUTAS GLOBALES =================
 // Estado del sistema (API pública)
 app.get("/api/status", (req, res) => {
   res.json({
@@ -236,7 +229,6 @@ app.get("/api/status", (req, res) => {
   });
 });
 
-// ================= INICIAR SERVIDOR =================
 app.listen(PORT, () => {
   console.log(`🚓 Servidor de Multas corriendo en puerto ${PORT}`);
   console.log(`📍 Frontend: http://localhost:${PORT}`);
